@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "379131371183",
+    "project_id": "polihack16-d0681",
+    "storage_bucket": "polihack16-d0681.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:379131371183:android:391b2e98940820cb4b3e5a",
+        "android_client_info": {
+          "package_name": "eu.flowspace.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAu0bV8A3cWUMrARbIBwZqsvJAi2iZhUW0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

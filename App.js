@@ -1,20 +1,50 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text } from 'react-native';
+import firebase from 'firebase/app';
+import 'firebase/auth';
+import LoginScreen from './razvam/index';
+import CalendarScreen from './inApp';
+import auth from '@react-native-firebase/auth';
+import Toast from 'react-native-toast-message';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
+const App = () => {
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
-}
+    useEffect(() => {
+        const unsubscribe = auth().onAuthStateChanged((user) => {
+            setUser(user);
+            setLoading(false);
+        });
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+        return () => unsubscribe();
+    }, []);
+
+    if (loading) {
+        return (
+            <View>
+                <Text>Loading...</Text>
+            </View>
+        );
+    }
+
+    if(user){
+        return( 
+        <GestureHandlerRootView>
+        <BottomSheetModalProvider>
+        <CalendarScreen />
+        </BottomSheetModalProvider>
+        </GestureHandlerRootView>
+    )
+    }else{
+        return( 
+            <GestureHandlerRootView>
+        <LoginScreen />
+        </GestureHandlerRootView>
+    )
+    }
+
+};
+
+export default App;

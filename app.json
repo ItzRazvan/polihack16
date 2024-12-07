@@ -19,10 +19,21 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "eu.flowspace.app",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "af87f4cd-b0c8-47c3-8eab-2c955e277838"
+      }
     }
   }
 }
