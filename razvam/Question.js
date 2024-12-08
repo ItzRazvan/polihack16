@@ -26,7 +26,7 @@ const Question = ({ text, selectedCircle, setSelectedCircle }) => {
 
 const styles = StyleSheet.create({
   question: {
-    color: 'grey',
+    color: 'white',
     fontSize: normalizeWidth(14),
     marginBottom: normalizeHeight(15),
     textAlign: 'center',
@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
   },
   label: {
     top: normalizeHeight(15),
-    color: 'grey',
+    color: 'white',
     fontSize: normalizeWidth(10),
   },
 });

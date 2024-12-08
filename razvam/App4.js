@@ -8,10 +8,12 @@ import { useNavigation } from '@react-navigation/native';
 import Background from './Background';
 import Toast from 'react-native-toast-message';
 import auth from '@react-native-firebase/auth';
+import { ActivityIndicator } from 'react-native';
 export default function App3({route}) {
   const [selectedCircle1, setSelectedCircle1] = useState(null);
   const [selectedCircle2, setSelectedCircle2] = useState(null);
   const [selectedCircle3, setSelectedCircle3] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
   params=route.params;
   const handleSubmit = () => {
@@ -22,6 +24,7 @@ export default function App3({route}) {
       });
       
     }else{
+      setLoading(true);
       auth().signInWithEmailAndPassword(params.email, "miaumiau")
     }
   };
@@ -58,11 +61,15 @@ export default function App3({route}) {
               <Text style={styles.btnText}>Next</Text>  
           </TouchableOpacity>
         </View>
-        <ProgressBar currentPage={3} totalPages={4} />
-
+        <ProgressBar currentPage={4} totalPages={4} />
       </View>
 
       <StatusBar style="auto" />
+      {loading && (
+          <View style={{position:"absolute", width:"100%", height:"100%", flex:1, justifyContent:"center", alignContent:"center", alignItems:"center", backgroundColor:"rgba(0, 0, 0, 0.9)"}}>
+            <ActivityIndicator size="large" color="#ffffff" />
+          </View>
+        )}
       <Toast/>
     </View>
   );
@@ -92,13 +99,13 @@ const styles = StyleSheet.create({
     left: normalizeWidth(20),
   },
   title: {
-    color: 'grey',
+    color: 'white',
     fontSize: normalizeWidth(22),
     fontWeight: 'bold',
   },
   enter: {
     top: normalizeHeight(10),
-    color: 'grey',
+    color: 'white',
     fontSize: normalizeWidth(10),
   },
   questions: {

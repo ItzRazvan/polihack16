@@ -71,13 +71,13 @@ const styles = StyleSheet.create({
     left: normalizeWidth(20),
   },
   title: {
-    color: 'grey',
+    color: 'white',
     fontSize: normalizeWidth(22),
     fontWeight: 'bold',
   },
   enter: {
     top: normalizeHeight(10),
-    color: 'grey',
+    color: 'white',
     fontSize: normalizeWidth(10),
   },
   text_input: {
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingLeft: 10,
     paddingBottom: 7,
-    color: 'grey',
+    color: 'white',
   },
   btn: {
     top: normalizeHeight(160),
@@ -101,11 +101,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#521c69',
     alignItems: 'center',
     justifyContent: 'center',
-    color: 'grey',
+    color: 'white',
     left: normalizeWidth(-5),
   },
   btnText: {
-    color: 'grey',
+    color: 'white',
     fontSize: normalizeWidth(15),
     lineHeight: 40,
     fontWeight: 'bold',
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     left: normalizeWidth(-20),
   },
   nac_text: {
-    color: 'grey',
+    color: 'white',
     fontSize: normalizeWidth(13),
   },
   nac_btn: {
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#2c1e33',
   },
   nac_btn_text: {
-    color: 'grey',
+    color: 'white',
     fontSize: normalizeWidth(13),
     fontWeight: 'bold',
   },

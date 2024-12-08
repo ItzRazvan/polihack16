@@ -89,13 +89,13 @@ const styles = StyleSheet.create({
     left: normalizeWidth(20),
   },
   title: {
-    color: 'grey',
+    color: 'white',
     fontSize: normalizeWidth(22),
     fontWeight: 'bold',
   },
   enter: {
     top: normalizeHeight(10),
-    color: 'grey',
+    color: 'white',
     fontSize: normalizeWidth(10),
   },
   questions: {

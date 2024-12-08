@@ -14,7 +14,7 @@ const Age = ({ age, setAge }) => {
         maximumValue={100}
         step={1}
         value={age}
-        onValueChange={setAge}
+        onSlidingComplete={setAge}
         minimumTrackTintColor="#c987e6"
         maximumTrackTintColor="#000000"
         thumbTintColor="#c987e6"

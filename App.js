@@ -8,6 +8,7 @@ import auth from '@react-native-firebase/auth';
 import Toast from 'react-native-toast-message';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
+import { ActivityIndicator } from 'react-native';
 const App = () => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -23,8 +24,8 @@ const App = () => {
 
     if (loading) {
         return (
-            <View>
-                <Text>Loading...</Text>
+            <View style={{backgroundColor: "black", flex:1, width:"100%", height:"100%", justifyContent:"center", alignItems:"center"}}>
+                <ActivityIndicator size="large" color="white" />
             </View>
         );
     }
