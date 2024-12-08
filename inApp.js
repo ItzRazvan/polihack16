@@ -1,5 +1,5 @@
 import React, { Component, useRef, useCallback, useEffect } from 'react';
-import { Alert, StyleSheet, Text, View, TouchableOpacity, TextInput, Image } from 'react-native';
+import { Alert, StyleSheet, Text, View, TouchableOpacity, TextInput, Image, FlatList } from 'react-native';
 import { Agenda } from 'react-native-calendars';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -23,65 +23,81 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import DatePicker from 'react-native-date-picker'
 import Toast from 'react-native-toast-message';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
-const BusyHoursModal = ({ modalRef, setBusy }) => {
+import HowAreYouFeeling from './hayf';
+const BusyHoursModal = ({ modalRef, setBusy, tasksToBeArranged }) => {
   const [busyHours, setBusyHours] = React.useState([8, 14]);
   return (
     <BottomSheetModal
       ref={modalRef}
-      snapPoints={['40%']}
+      snapPoints={['80%']}
       backgroundStyle={{ backgroundColor: '#200f29' }}
       handleIndicatorStyle={{ backgroundColor: '#decfb4' }}
       enableDynamicSizing={false}
     >
       <BottomSheetView style={{ padding: 20, alignItems: 'center' }}>
-        <Text style={{ color: '#decfb4', marginBottom: 10, textAlign: 'center' }}>Select Busy Hours</Text>
-        <Text style={{ color: '#decfb4', marginBottom: 10, textAlign: 'center' }}>
-          {busyHours[0]}:00 - {busyHours[busyHours.length - 1]}:00
-        </Text>
-        <MultiSlider
-          values={busyHours}
-          sliderLength={300}
-          onValuesChange={(values) => {
-            console.log(values)
-            setBusyHours([values[0], values[1]]);
-          }}
-          min={0}
-          max={23}
-          step={1}
-          allowOverlap={false}
-          snapped
-          customMarker={(e) => {
-            return (
-              <View
-                style={{
-                  height: 40,
-                  width: 40,
-                  borderRadius: 20,
-                  backgroundColor: '#c987e6',
-                  borderWidth: 1,
-                  borderColor: '#decfb4',
-                }}
-              />
-            );
-          }}
-        />
-        <TouchableOpacity
-          style={{
-            backgroundColor: '#c987e6',
-            padding: 15,
-            borderRadius: 5,
-            alignItems: 'center',
-            width: '100%',
-            marginTop: 20,
-          }}
-          onPress={() => {
-            setBusy(busyHours);
-            console.log(busyHours);
-            modalRef.current?.close();
-          }}
-        >
-          <Text style={{ color: 'white' }}>Submit</Text>
-        </TouchableOpacity>
+        <View style={{ backgroundColor: '#3a2a4e', borderRadius: 10, padding: 20, width: '100%' }}>
+          <Text style={{ color: '#decfb4', marginBottom: 10, textAlign: 'center' }}>Select Busy Hours</Text>
+          <Text style={{ color: '#decfb4', marginBottom: 10, textAlign: 'center' }}>
+            {busyHours[0]}:00 - {busyHours[busyHours.length - 1]}:00
+          </Text>
+          <MultiSlider
+            values={busyHours}
+            sliderLength={300}
+            onValuesChange={(values) => {
+              console.log(values)
+              setBusyHours([values[0], values[1]]);
+            }}
+            min={0}
+            max={23}
+            step={1}
+            allowOverlap={false}
+            snapped
+            customMarker={(e) => {
+              return (
+                <View
+                  style={{
+                    height: 40,
+                    width: 40,
+                    borderRadius: 20,
+                    backgroundColor: '#c987e6',
+                    borderWidth: 1,
+                    borderColor: '#decfb4',
+                  }}
+                />
+              );
+            }}
+          />
+          <TouchableOpacity
+            style={{
+              backgroundColor: '#c987e6',
+              padding: 15,
+              borderRadius: 5,
+              alignItems: 'center',
+              width: '100%',
+              marginTop: 20,
+            }}
+            onPress={() => {
+              setBusy(busyHours);
+              console.log(busyHours);
+              modalRef.current?.close();
+            }}
+          >
+            <Text style={{ color: 'white' }}>Submit</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={{ backgroundColor: '#3a2a4e', borderRadius: 10, padding: 20, width: '100%', marginTop: 20 }}>
+          <Text style={{ color: '#decfb4', marginBottom: 10, textAlign: 'center' }}>Tasks to be arranged</Text>
+          <FlatList
+            data={tasksToBeArranged}
+            renderItem={({ item }) => (
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', padding: 10, borderBottomColor: '#decfb4', borderBottomWidth: 1 }}>
+                <Text style={{ color: '#decfb4' }}>{item.description}</Text>
+                <Text style={{ color: '#decfb4' }}>{new Date(item.dueDate).toLocaleDateString('en-GB')}</Text>
+              </View>
+            )}
+            keyExtractor={(item, index) => index.toString()}
+          />
+        </View>
       </BottomSheetView>
     </BottomSheetModal>
   );
@@ -204,7 +220,6 @@ const NewTaskModal = ({ modalRef }) => {
           placeholder="Enter task duration"
           placeholderTextColor="#decfb4"
           keyboardType="numeric"
-          value={duration}
           onChangeText={setDuration}
         />
         <TouchableOpacity
@@ -274,16 +289,17 @@ const AgendaScreen = () => {
   const energyLevelJSON = `\n{ \"title\": \"Average Hourly Energy Levels\", \"xAxisLabel\": \"Hour\", \"yAxisLabel\": \"Energy Level\", \"data\": [ {\"hour\": 7, \"energyLevel\": 2.5}, {\"hour\": 8, \"energyLevel\": 3.2}, {\"hour\": 9, \"energyLevel\": 3.5}, {\"hour\": 10, \"energyLevel\": 3.8}, {\"hour\": 11, \"energyLevel\": 3.7}, {\"hour\": 12, \"energyLevel\": 3.5}, {\"hour\": 13, \"energyLevel\": 3.2}, {\"hour\": 14, \"energyLevel\": 1.8}, {\"hour\": 15, \"energyLevel\": 2.0}, {\"hour\": 16, \"energyLevel\": 2.3}, {\"hour\": 17, \"energyLevel\": 2.5}, {\"hour\": 18, \"energyLevel\": 3.2}, {\"hour\": 19, \"energyLevel\": 3.4}, {\"hour\": 20, \"energyLevel\": 3.7}, {\"hour\": 21, \"energyLevel\": 3.0}, {\"hour\": 22, \"energyLevel\": 2.5}, {\"hour\": 23, \"energyLevel\": 2.0}, {\"hour\": 0, \"energyLevel\": 1.5}, ], \"peak\": { \"start\": 7.5, \"end\": 12.5, \"label\": \"PEAK (7:30 AM - 12:30 PM): Ideal for complex tasks requiring focus and concentration.\" }, \"trough\": { \"start\": 13, \"end\": 15, \"label\": \"TROUGH (1:00 PM - 5:00 PM): Rest, recharge, or engage in low-intensity activities.\" }, \"rebound\": { \"start\": 17.5, \"end\": 20.5, \"label\": \"REBOUND (5:30 PM - 8:30 PM): Suitable for creative tasks or those requiring less intense focus.\" }, \"late_night\": { \"start\": 21, \"end\": 1, \"label\": \"LATE NIGHT (9:00 PM - 1:00 AM): Wind down, relax, and prepare for sleep.\" } }`
   const prompt = `"You are an advanced time management assistant. Your task is to reorder and schedule the provided tasks based on the following JSON, which includes average hourly energy levels, categorized periods (PEAK, TROUGH, REBOUND, LATE NIGHT), and their respective suitability for various task types.
 
-You must analyze the provided tasks, considering their importance, difficulty, and time cost, while ensuring absolutely no overlap in their schedules. Task durations must be rounded up to the nearest whole hour (e.g., a task with a duration of 1.7 hours must be rounded to 2 hours) when calculating the schedule. Additionally, take into account any user-specified busy hours and avoid scheduling tasks during those periods.
+You must analyze the provided tasks, considering their importance, difficulty, and time cost, while ensuring absolutely no overlap in their schedules. Task durations must be rounded up to the nearest, highest whole hour (e.g., a task with a duration of 1.7 hours must be rounded to 2 hours (ceil)) when calculating the schedule. Additionally, take into account any user-specified busy hours and avoid scheduling tasks during those periods.
 
-To prevent overburdening the user:
-- Spread tasks across different days when possible.
+To optimize user performance:
+- Harder and more important tasks should be scheduled during periods of higher energy levels.
+- Spread tasks across different days when possible to prevent overburdening the user.
 - Alternate between tasks of higher difficulty and tasks of lower difficulty if multiple tasks must be completed on the same day.
 
 For each task, calculate and assign the following fields within its JSON object:
-- "optimalHour:int": The most suitable hour for the task based on its requirements and the energy level data.
+- "optimalHour:int": The most suitable start hour for the task based on its requirements and the energy level data.
 - "energyLevel:float": The energy level at the calculated optimal hour.
-- "optimalDate: string (DD/MM/YYYY)": The most suitable date for the task in the format DD/MM/YYYY, based on its priority, duration, and the given constraints.
+- "optimalDate: string (DD/MM/YYYY)": The most suitable start date for the task in the format DD/MM/YYYY, based on its priority, duration, and the given constraints.
 
 Your response **must** strictly adhere to the provided JSON format and include all required fields for each task. Do not include any text or explanation outside of the JSON. Overlapping tasks, failure to adhere to the duration rounding rule, or any response containing anything other than the updated JSON will be considered invalid.
 
@@ -295,6 +311,7 @@ For example, a valid JSON response should look like this:
     }
 ]
 }
+
 `
 const systemPrompt = prompt + energyLevelJSON;
 
@@ -325,6 +342,11 @@ const systemPrompt = prompt + energyLevelJSON;
       console.log(response.choices[0].message.content);
       const updatedTasks = JSON.parse(response.choices[0].message.content).tasks.sort((a, b) => a.optimalHour - b.optimalHour);
       const newItems = items;
+      for (let i = -15; i < 85; i++) {
+        const time = new Date(currentDate).getTime() + i * 24 * 60 * 60 * 1000;
+        const strTime = timeToString(time);
+        newItems[strTime] = [];
+      }
       let newSelectedDate = currentDate;
       updatedTasks.forEach(task => {
         const date = task.optimalDate.split('/').reverse().join('-');
@@ -408,9 +430,9 @@ const systemPrompt = prompt + energyLevelJSON;
   const renderItem = (reservation) => {
     return (
       <Pressable style={[styles.item, { height: 100 }]} onPress={() => { Alert.alert('Task Details', `Description: ${reservation.description}\nDifficulty: ${reservation.difficulty}\nImportance: ${reservation.importance}\nDuration: ${reservation.duration}\nEnergyLevel: ${reservation.energyLevel}`) }}>
-      <Text>{reservation.optimalHour}:00 - {reservation.optimalHour+1}:00</Text>
+      <Text>{reservation.optimalHour}:00 - {reservation.optimalHour + Math.ceil(reservation.duration)}:00</Text>
       <Text>{reservation.description}</Text>
-      <Text>due Date: {new Date(reservation.dueDate).toLocaleDateString('en-GB')}</Text>
+      <Text>Due Date: {new Date(reservation.dueDate).toLocaleDateString('en-GB')} {new Date(reservation.dueDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</Text>
       </Pressable>
     );
   };
@@ -505,10 +527,11 @@ const systemPrompt = prompt + energyLevelJSON;
         <Ionicons name="time" size={24} color="white" />
       </Pressable>
       <NewTaskModal modalRef={bottomSheetModalRef} />
-      <BusyHoursModal modalRef={bottomSheetModalRef2} setBusy={setBusyHours} />
+      <BusyHoursModal modalRef={bottomSheetModalRef2} setBusy={setBusyHours} tasksToBeArranged={tasksToBeArranged} />
       {loading && (<View style={{position:"absolute", width:"100%", height:"100%", backgroundColor:"rgba(0, 0, 0, 0.9)", flex:1, justifyContent:"center", alignItems:"center", zIndex:999}}>
         <Image source={require('./assets/iaiai.gif')} style={{width:50, height:50}} />
       </View>)}
+      <HowAreYouFeeling/>
     </View>
   );
 };
