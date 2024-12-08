@@ -42,17 +42,17 @@ export default function App3({route}) {
            <View style={styles.questions}>
 
             <Question
-              text="I am a very organized person"
+              text="Do you usually meet tight deadlines better under pressure?"
               selectedCircle={selectedCircle1}
               setSelectedCircle={setSelectedCircle1}
             />
             <Question
-              text="I am a very organized person"
+              text="Do you like to plan your tasks a day or more in advance?"
               selectedCircle={selectedCircle2}
               setSelectedCircle={setSelectedCircle2}
             />
             <Question
-              text="I am a very organized person"
+              text="Do you feel less motivated to work on tasks that lack immediate urgency?"
               selectedCircle={selectedCircle3}
               setSelectedCircle={setSelectedCircle3}
             />

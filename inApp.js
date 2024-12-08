@@ -22,6 +22,71 @@ import firestore from '@react-native-firebase/firestore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import DatePicker from 'react-native-date-picker'
 import Toast from 'react-native-toast-message';
+import MultiSlider from '@ptomasroos/react-native-multi-slider';
+const BusyHoursModal = ({ modalRef, setBusy }) => {
+  const [busyHours, setBusyHours] = React.useState([8, 14]);
+  return (
+    <BottomSheetModal
+      ref={modalRef}
+      snapPoints={['40%']}
+      backgroundStyle={{ backgroundColor: '#200f29' }}
+      handleIndicatorStyle={{ backgroundColor: '#decfb4' }}
+      enableDynamicSizing={false}
+    >
+      <BottomSheetView style={{ padding: 20, alignItems: 'center' }}>
+        <Text style={{ color: '#decfb4', marginBottom: 10, textAlign: 'center' }}>Select Busy Hours</Text>
+        <Text style={{ color: '#decfb4', marginBottom: 10, textAlign: 'center' }}>
+          {busyHours[0]}:00 - {busyHours[busyHours.length - 1]}:00
+        </Text>
+        <MultiSlider
+          values={busyHours}
+          sliderLength={300}
+          onValuesChange={(values) => {
+            console.log(values)
+            setBusyHours([values[0], values[1]]);
+          }}
+          min={0}
+          max={23}
+          step={1}
+          allowOverlap={false}
+          snapped
+          customMarker={(e) => {
+            return (
+              <View
+                style={{
+                  height: 40,
+                  width: 40,
+                  borderRadius: 20,
+                  backgroundColor: '#c987e6',
+                  borderWidth: 1,
+                  borderColor: '#decfb4',
+                }}
+              />
+            );
+          }}
+        />
+        <TouchableOpacity
+          style={{
+            backgroundColor: '#c987e6',
+            padding: 15,
+            borderRadius: 5,
+            alignItems: 'center',
+            width: '100%',
+            marginTop: 20,
+          }}
+          onPress={() => {
+            setBusy(busyHours);
+            console.log(busyHours);
+            modalRef.current?.close();
+          }}
+        >
+          <Text style={{ color: 'white' }}>Submit</Text>
+        </TouchableOpacity>
+      </BottomSheetView>
+    </BottomSheetModal>
+  );
+};
+
 const NewTaskModal = ({ modalRef }) => {
   const [date, setDate] = React.useState(new Date());
   const [open, setOpen] = React.useState(false);
@@ -164,7 +229,10 @@ const NewTaskModal = ({ modalRef }) => {
                 dueDate: firestore.Timestamp.fromDate(date),
               })
               .then(() => {
-                console.log('Task added!');
+                Toast.show({
+                  type:"info",
+                  text1:"Task adaugat!"
+                })
                 modalRef.current?.close();
               });
           }}
@@ -179,14 +247,23 @@ const AgendaScreen = () => {
   const [items, setItems] = React.useState({});
   const [tasksToBeArranged, setTasksToBeArranged] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
+  const [busyHours, setBusyHours] = React.useState([8, 14]);
+  const [sleepHours, setSleepHours] = React.useState([23, 6]);
   const currentDate = new Date().toLocaleDateString('en-GB').split('/').reverse().join('-');
   const [selectedDate, setSelectedDate] = React.useState(currentDate);
   const bottomSheetModalRef = useRef(null);
+  const bottomSheetModalRef2 = useRef(null);
   const handlePresentModalPress = () => {
     bottomSheetModalRef.current?.present();
   };
   const handleSheetChanges = (index) => {
     console.log('handleSheetChanges', index);
+  };
+  const handlePresentModalPress2 = () => {
+    bottomSheetModalRef2.current?.present();
+  };
+  const handleSheetChanges2 = (index) => {
+    console.log('handleSheetChanges2', index);
   };
   const baseURL = "https://api.aimlapi.com/v1";
   const apiKey = "9644a52e260844e28024692c252e6247";
@@ -223,10 +300,11 @@ const systemPrompt = prompt + energyLevelJSON;
 
 
   const handleiaiai = () => {
+    console.log(Array.from({ length: busyHours[1] - busyHours[0] + 1 }, (_, i) => i + busyHours[0]))
     setLoading(true);
     const userPrompt = {
       tasks: tasksToBeArranged,
-      userData: { busyHours: [8, 9, 10, 11, 12, 13, 14], sleepHours: [23, 0, 1, 2, 3, 4, 5, 6] },
+      userData: { busyHours: Array.from({ length: busyHours[1] - busyHours[0] + 1 }, (_, i) => i + busyHours[0]), sleepHours: [23, 0, 1, 2, 3, 4, 5, 6] },
       environmentData: { currentDate: currentDate, currentTime: new Date().getHours() }
     };
     api.chat.completions.create({
@@ -260,6 +338,7 @@ const systemPrompt = prompt + energyLevelJSON;
           duration: task.duration,
           optimalHour: task.optimalHour,
           energyLevel: task.energyLevel,
+          dueDate: task.dueDate,
         });
         newSelectedDate = date; // Update the selected date to the last task's date
       });
@@ -306,8 +385,9 @@ const systemPrompt = prompt + energyLevelJSON;
   const renderItem = (reservation) => {
     return (
       <Pressable style={[styles.item, { height: 100 }]} onPress={() => { Alert.alert('Task Details', `Description: ${reservation.description}\nDifficulty: ${reservation.difficulty}\nImportance: ${reservation.importance}\nDuration: ${reservation.duration}\nEnergyLevel: ${reservation.energyLevel}`) }}>
-        <Text>{reservation.optimalHour}</Text>
-        <Text>{reservation.description}</Text>
+      <Text>{reservation.optimalHour}</Text>
+      <Text>{reservation.description}</Text>
+      <Text>due Date: {new Date(reservation.dueDate).toLocaleDateString('en-GB')}</Text>
       </Pressable>
     );
   };
@@ -384,7 +464,24 @@ const systemPrompt = prompt + energyLevelJSON;
       >
         <MaterialCommunityIcons name="star-four-points-outline" size={24} color="#AACCEE" />
       </Pressable>
+      <Pressable
+        style={({ pressed }) => [
+          {
+            position: 'absolute',
+            bottom: 20,
+            alignSelf: 'center',
+            backgroundColor: '#c987e6',
+            padding: 15,
+            borderRadius: 50,
+            transform: [{ scale: pressed ? 0.95 : 1 }],
+          },
+        ]}
+        onPress={handlePresentModalPress2}
+      >
+        <Ionicons name="time" size={24} color="white" />
+      </Pressable>
       <NewTaskModal modalRef={bottomSheetModalRef} />
+      <BusyHoursModal modalRef={bottomSheetModalRef2} setBusy={setBusyHours} />
       {loading && (<View style={{position:"absolute", width:"100%", height:"100%", backgroundColor:"rgba(0, 0, 0, 0.9)", flex:1, justifyContent:"center", alignItems:"center", zIndex:999}}>
         <Image source={require('./assets/iaiai.gif')} style={{width:50, height:50}} />
       </View>)}

@@ -41,12 +41,12 @@ export default function App2({route}) {
             <Age age={age} setAge={setAge} />
 
             <Question
-              text="I am a very organized person"
+              text="Do you prefer working on high-focus tasks early in the morning?"
               selectedCircle={selectedCircle1}
               setSelectedCircle={setSelectedCircle1}
             />
             <Question
-              text="I am a very organized person"
+              text="Do you often feel more productive in the evening than in the afternoon?"
               selectedCircle={selectedCircle2}
               setSelectedCircle={setSelectedCircle2}
             />

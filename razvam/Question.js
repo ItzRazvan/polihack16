@@ -27,7 +27,7 @@ const Question = ({ text, selectedCircle, setSelectedCircle }) => {
 const styles = StyleSheet.create({
   question: {
     color: 'white',
-    fontSize: normalizeWidth(14),
+    fontSize: normalizeWidth(8),
     marginBottom: normalizeHeight(15),
     textAlign: 'center',
   },
