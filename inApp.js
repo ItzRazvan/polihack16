@@ -324,7 +324,7 @@ const systemPrompt = prompt + energyLevelJSON;
     }).then((response) => {
       console.log(response.choices[0].message.content);
       const updatedTasks = JSON.parse(response.choices[0].message.content).tasks.sort((a, b) => a.optimalHour - b.optimalHour);
-      const newItems = {};
+      const newItems = items;
       let newSelectedDate = currentDate;
       updatedTasks.forEach(task => {
         const date = task.optimalDate.split('/').reverse().join('-');
@@ -340,7 +340,9 @@ const systemPrompt = prompt + energyLevelJSON;
           energyLevel: task.energyLevel,
           dueDate: task.dueDate,
         });
-        newSelectedDate = date; // Update the selected date to the last task's date
+        if (!newSelectedDate || new Date(date) < new Date(newSelectedDate)) {
+          newSelectedDate = date; // Update the selected date to the first task's date
+        }
       });
       setItems(newItems);
       setSelectedDate(newSelectedDate); // Set the selected date
@@ -351,10 +353,31 @@ const systemPrompt = prompt + energyLevelJSON;
       setLoading(false);
     });
   };
-
+  useEffect(() => {
+    const newItems = {};
+    const today = new Date();
+    for (let i = -15; i < 85; i++) {
+      const time = today.getTime() + i * 24 * 60 * 60 * 1000;
+      const strTime = timeToString(time);
+      if (!newItems[strTime]) {
+        newItems[strTime] = [];
+      }
+    }
+    setItems(newItems);
+  }, []);
   const loadItems = (day) => {
     const newItems = items || {};
-
+    setTimeout(() => {
+      for (let i = -15; i < 85; i++) {
+      const time = day.timestamp + i * 24 * 60 * 60 * 1000;
+      const strTime = timeToString(time);
+      if (!newItems[strTime]) {
+        newItems[strTime] = [];
+      }
+      }
+      const newItemsCopy = { ...newItems };
+      setItems(newItemsCopy);
+    }, 1000);
   };
   useEffect(() => {
     const userId = auth().currentUser.uid;
@@ -385,7 +408,7 @@ const systemPrompt = prompt + energyLevelJSON;
   const renderItem = (reservation) => {
     return (
       <Pressable style={[styles.item, { height: 100 }]} onPress={() => { Alert.alert('Task Details', `Description: ${reservation.description}\nDifficulty: ${reservation.difficulty}\nImportance: ${reservation.importance}\nDuration: ${reservation.duration}\nEnergyLevel: ${reservation.energyLevel}`) }}>
-      <Text>{reservation.optimalHour}</Text>
+      <Text>{reservation.optimalHour}:00 - {reservation.optimalHour+1}:00</Text>
       <Text>{reservation.description}</Text>
       <Text>due Date: {new Date(reservation.dueDate).toLocaleDateString('en-GB')}</Text>
       </Pressable>
@@ -415,6 +438,7 @@ const systemPrompt = prompt + energyLevelJSON;
         items={items}
         selected={selectedDate}
         renderItem={renderItem}
+        loadItemsForMonth={loadItems}
         renderEmptyDate={renderEmptyDate}
         rowHasChanged={rowHasChanged}
         theme={{
