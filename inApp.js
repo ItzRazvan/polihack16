@@ -23,6 +23,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import DatePicker from 'react-native-date-picker'
 import Toast from 'react-native-toast-message';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
+import {GoogleGenAI} from "@google/genai"
 import HowAreYouFeeling from './hayf';
 const BusyHoursModal = ({ modalRef, setBusy, tasksToBeArranged }) => {
   const [busyHours, setBusyHours] = React.useState([8, 14]);
@@ -62,7 +63,7 @@ const BusyHoursModal = ({ modalRef, setBusy, tasksToBeArranged }) => {
                     backgroundColor: '#c987e6',
                     borderWidth: 1,
                     borderColor: '#decfb4',
-                  }}
+                  }}d
                 />
               );
             }}
@@ -280,12 +281,10 @@ const AgendaScreen = () => {
   const handleSheetChanges2 = (index) => {
     console.log('handleSheetChanges2', index);
   };
-  const baseURL = "https://api.aimlapi.com/v1";
-  const apiKey = "9644a52e260844e28024692c252e6247";
-  const api = new OpenAI({
-    apiKey,
-    baseURL,
-  });
+
+  const GEMINI_API_KEY = "AIzaSyC1clS6dlnxagGHxNkI3fEkTq84WMNPhkA"
+  const genAI = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); 
   const energyLevelJSON = `\n{ \"title\": \"Average Hourly Energy Levels\", \"xAxisLabel\": \"Hour\", \"yAxisLabel\": \"Energy Level\", \"data\": [ {\"hour\": 7, \"energyLevel\": 2.5}, {\"hour\": 8, \"energyLevel\": 3.2}, {\"hour\": 9, \"energyLevel\": 3.5}, {\"hour\": 10, \"energyLevel\": 3.8}, {\"hour\": 11, \"energyLevel\": 3.7}, {\"hour\": 12, \"energyLevel\": 3.5}, {\"hour\": 13, \"energyLevel\": 3.2}, {\"hour\": 14, \"energyLevel\": 1.8}, {\"hour\": 15, \"energyLevel\": 2.0}, {\"hour\": 16, \"energyLevel\": 2.3}, {\"hour\": 17, \"energyLevel\": 2.5}, {\"hour\": 18, \"energyLevel\": 3.2}, {\"hour\": 19, \"energyLevel\": 3.4}, {\"hour\": 20, \"energyLevel\": 3.7}, {\"hour\": 21, \"energyLevel\": 3.0}, {\"hour\": 22, \"energyLevel\": 2.5}, {\"hour\": 23, \"energyLevel\": 2.0}, {\"hour\": 0, \"energyLevel\": 1.5}, ], \"peak\": { \"start\": 7.5, \"end\": 12.5, \"label\": \"PEAK (7:30 AM - 12:30 PM): Ideal for complex tasks requiring focus and concentration.\" }, \"trough\": { \"start\": 13, \"end\": 15, \"label\": \"TROUGH (1:00 PM - 5:00 PM): Rest, recharge, or engage in low-intensity activities.\" }, \"rebound\": { \"start\": 17.5, \"end\": 20.5, \"label\": \"REBOUND (5:30 PM - 8:30 PM): Suitable for creative tasks or those requiring less intense focus.\" }, \"late_night\": { \"start\": 21, \"end\": 1, \"label\": \"LATE NIGHT (9:00 PM - 1:00 AM): Wind down, relax, and prepare for sleep.\" } }`
   const prompt = `"You are an advanced time management assistant. Your task is to reorder and schedule the provided tasks based on the following JSON, which includes average hourly energy levels, categorized periods (PEAK, TROUGH, REBOUND, LATE NIGHT), and their respective suitability for various task types.
 
@@ -315,8 +314,7 @@ For example, a valid JSON response should look like this:
 `
 const systemPrompt = prompt + energyLevelJSON;
 
-
-  const handleiaiai = () => {
+const handleiaiai = async () => {
     console.log(Array.from({ length: busyHours[1] - busyHours[0] + 1 }, (_, i) => i + busyHours[0]))
     setLoading(true);
     const userPrompt = {
@@ -324,23 +322,36 @@ const systemPrompt = prompt + energyLevelJSON;
       userData: { busyHours: Array.from({ length: busyHours[1] - busyHours[0] + 1 }, (_, i) => i + busyHours[0]), sleepHours: [23, 0, 1, 2, 3, 4, 5, 6] },
       environmentData: { currentDate: currentDate, currentTime: new Date().getHours() }
     };
-    api.chat.completions.create({
-      model: "gpt-4o-mini-2024-07-18",
-      messages: [
-        {
-          role: "system",
-          content: systemPrompt,
+    try {
+      const result = await model.generateContent({
+        contents: [
+          { role: "user", parts: [{ text: systemPrompt }] },
+          { role: "user", parts: [{ text: JSON.stringify(userPrompt) }] },
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 512,
+          responseMimeType: "application/json",
         },
-        {
-          role: "user",
-          content: JSON.stringify(userPrompt),
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 512,
-    }).then((response) => {
-      console.log(response.choices[0].message.content);
-      const updatedTasks = JSON.parse(response.choices[0].message.content).tasks.sort((a, b) => a.optimalHour - b.optimalHour);
+      });
+
+      const responseText = result.response.text();
+      console.log("Gemini Raw Response:", responseText);
+
+      let parsedResponse;
+      try {
+        parsedResponse = JSON.parse(responseText.replace(/```json\n|\n```/g, ''));
+      } catch (parseError) {
+        console.error("Failed to parse JSON directly, trying to extract JSON string:", parseError);
+        const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/);
+        if (jsonMatch && jsonMatch[1]) {
+          parsedResponse = JSON.parse(jsonMatch[1]);
+        } else {
+          throw new Error("Could not extract valid JSON from Gemini response.");
+        }
+      }
+
+      const updatedTasks = parsedResponse.tasks.sort((a, b) => a.optimalHour - b.optimalHour);
       const newItems = items;
       for (let i = -15; i < 85; i++) {
         const time = new Date(currentDate).getTime() + i * 24 * 60 * 60 * 1000;
@@ -360,21 +371,23 @@ const systemPrompt = prompt + energyLevelJSON;
           duration: task.duration,
           optimalHour: task.optimalHour,
           energyLevel: task.energyLevel,
-          dueDate: task.dueDate,
+          dueDate: new Date(task.dueDate.split('/').reverse().join('-')).toISOString(),
         });
         if (!newSelectedDate || new Date(date) < new Date(newSelectedDate)) {
-          newSelectedDate = date; // Update the selected date to the first task's date
+          newSelectedDate = date;
         }
       });
       setItems(newItems);
-      setSelectedDate(newSelectedDate); // Set the selected date
+      setSelectedDate(newSelectedDate);
       console.log(newItems);
-      setLoading(false);
-    }).catch((error) => {
+    } catch (error) {
       console.log(error);
       setLoading(false);
-    });
-  };
+      Alert.alert("Error", "Failed to generate schedule. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
   useEffect(() => {
     const newItems = {};
     const today = new Date();
